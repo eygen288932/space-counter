@@ -27,12 +27,12 @@
             width: 100%;
         }
 
-        /* Language selector */
         .lang-selector {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .lang-btn {
@@ -292,6 +292,37 @@
                 <div class="item-number" id="sunKm">0.000</div>
                 <div class="item-sub" data-i18n="sun_sub">км · 350 км/с</div>
             </div>
+
+            <div class="item">
+                <div class="item-title" data-i18n="light_title">💡 свет пролетел</div>
+                <div class="item-number" id="lightKm">0</div>
+                <div class="item-sub" data-i18n="light_sub">км · 299 792 км/с</div>
+            </div>
+        </div>
+
+        <!-- Universe expansion -->
+        <div class="expand-wrapper">
+            <div class="expand-header" id="universeToggle">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;">
+                    <span style="font-weight:500; color:#555; font-size:0.9rem;" data-i18n="universe_title">🌌 расширение Вселенной</span>
+                    <span class="item-number" id="universeExpansion">0.000</span>
+                    <span style="font-size:0.75rem; color:#999;" data-i18n="universe_unit">Мпк</span>
+                    <span class="expand-arrow" id="universeArrow">▾</span>
+                </div>
+            </div>
+            <div class="expand-details" id="universeDetails">
+                <div style="font-weight:500; font-size:0.85rem; color:#444; margin-bottom:10px;" data-i18n="universe_detail_title">Постоянная Хаббла: 73.2 км/с/Мпк</div>
+                <div class="detail-row">
+                    <span class="detail-label" data-i18n="universe_age">⏳ Возраст Вселенной</span>
+                    <span class="detail-value" id="universeAge">0</span>
+                    <span class="detail-sub" data-i18n="universe_age_sub">лет с Большого взрыва</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label" data-i18n="universe_expansion_speed">📏 Расширение за 1 секунду</span>
+                    <span class="detail-value" id="universePerSec">0</span>
+                    <span class="detail-sub" data-i18n="universe_expansion_sub">км на 1 Мпк</span>
+                </div>
+            </div>
         </div>
 
         <!-- Solar energy -->
@@ -401,11 +432,16 @@
             "use strict";
 
             const startTime = Date.now();
+            const BIG_BANG_TIME = 13.8e9; // 13.8 billion years in seconds
 
             // --- Точные значения ---
             const SATELLITE_SPEED = 7.77;
             const EARTH_SPEED = 29.785;
             const SUN_SPEED = 350;
+            const LIGHT_SPEED = 299792.458; // км/с
+
+            // Постоянная Хаббла: 73.2 км/с/Мпк
+            const HUBBLE_CONSTANT = 73.2; // км/с/Мпк
 
             const SOLAR_POWER_PW = 174;
             const REFLECTED_PCT = 0.30;
@@ -415,11 +451,11 @@
             const NUCLEAR_POWER_GW = 304;
             const NUCLEAR_THERMAL_POWER_GW = 1000;
 
-            // --- Human counters (per second) ---
+            // --- Human counters ---
             const BIRTHS_PER_SEC = 4.3;
             const COFFEE_PER_SEC = 26000;
             const GOOGLE_PER_SEC = 99000;
-            const FOOD_PER_SEC = 41; // tons
+            const FOOD_PER_SEC = 41;
             const EMAIL_PER_SEC = 3500000;
             const YOUTUBE_PER_SEC = 115000;
 
@@ -428,6 +464,11 @@
             const satelliteEl = document.getElementById('satelliteKm');
             const earthEl = document.getElementById('earthKm');
             const sunEl = document.getElementById('sunKm');
+            const lightEl = document.getElementById('lightKm');
+
+            const universeExpansionEl = document.getElementById('universeExpansion');
+            const universeAgeEl = document.getElementById('universeAge');
+            const universePerSecEl = document.getElementById('universePerSec');
 
             const solarTotalEl = document.getElementById('solarTotal');
             const solarReflectedEl = document.getElementById('solarReflected');
@@ -444,6 +485,17 @@
             const foodEl = document.getElementById('food');
             const emailEl = document.getElementById('email');
             const youtubeEl = document.getElementById('youtube');
+
+            // --- Toggle: universe ---
+            const universeToggle = document.getElementById('universeToggle');
+            const universeDetails = document.getElementById('universeDetails');
+            const universeArrow = document.getElementById('universeArrow');
+            let universeOpen = false;
+            universeToggle.addEventListener('click', function() {
+                universeOpen = !universeOpen;
+                universeDetails.classList.toggle('open', universeOpen);
+                universeArrow.classList.toggle('open', universeOpen);
+            });
 
             // --- Toggle: solar ---
             const solarToggle = document.getElementById('solarToggle');
@@ -479,6 +531,15 @@
                     earth_sub: 'км · 29.785 км/с',
                     sun_title: '☀️ Солнце пролетело',
                     sun_sub: 'км · 350 км/с',
+                    light_title: '💡 свет пролетел',
+                    light_sub: 'км · 299 792 км/с',
+                    universe_title: '🌌 расширение Вселенной',
+                    universe_unit: 'Мпк',
+                    universe_detail_title: 'Постоянная Хаббла: 73.2 км/с/Мпк',
+                    universe_age: '⏳ Возраст Вселенной',
+                    universe_age_sub: 'лет с Большого взрыва',
+                    universe_expansion_speed: '📏 Расширение за 1 секунду',
+                    universe_expansion_sub: 'км на 1 Мпк',
                     solar_title: '☀️ энергии прилетело',
                     solar_unit: 'ПВт·с',
                     solar_detail_title: 'Что происходит с этой энергией?',
@@ -517,6 +578,15 @@
                     earth_sub: 'km · 29.785 km/s',
                     sun_title: '☀️ Sun traveled',
                     sun_sub: 'km · 350 km/s',
+                    light_title: '💡 light traveled',
+                    light_sub: 'km · 299,792 km/s',
+                    universe_title: '🌌 universe expansion',
+                    universe_unit: 'Mpc',
+                    universe_detail_title: 'Hubble constant: 73.2 km/s/Mpc',
+                    universe_age: '⏳ Age of the Universe',
+                    universe_age_sub: 'years since Big Bang',
+                    universe_expansion_speed: '📏 Expansion per second',
+                    universe_expansion_sub: 'km per 1 Mpc',
                     solar_title: '☀️ solar energy received',
                     solar_unit: 'PW·s',
                     solar_detail_title: 'What happens to this energy?',
@@ -534,16 +604,16 @@
                     births_title: '👶 Births',
                     births_sub: '4.3 babies/sec',
                     coffee_title: '☕ Coffee consumed',
-                    coffee_sub: '26 000 cups/sec',
+                    coffee_sub: '26,000 cups/sec',
                     google_title: '🔍 Google searches',
-                    google_sub: '99 000 searches/sec',
+                    google_sub: '99,000 searches/sec',
                     food_title: '🍽️ Food wasted',
                     food_sub: '41 tons/sec',
                     digital_title: '💻 Digital world',
                     email_title: '✉️ Emails sent',
                     email_sub: '3.5M emails/sec',
                     youtube_title: '🎬 YouTube views',
-                    youtube_sub: '115 000 videos/sec'
+                    youtube_sub: '115,000 videos/sec'
                 },
                 es: {
                     timer_label: 'llevas aquí',
@@ -555,6 +625,15 @@
                     earth_sub: 'km · 29.785 km/s',
                     sun_title: '☀️ Sol recorrió',
                     sun_sub: 'km · 350 km/s',
+                    light_title: '💡 luz recorrió',
+                    light_sub: 'km · 299,792 km/s',
+                    universe_title: '🌌 expansión del Universo',
+                    universe_unit: 'Mpc',
+                    universe_detail_title: 'Constante de Hubble: 73.2 km/s/Mpc',
+                    universe_age: '⏳ Edad del Universo',
+                    universe_age_sub: 'años desde el Big Bang',
+                    universe_expansion_speed: '📏 Expansión por segundo',
+                    universe_expansion_sub: 'km por 1 Mpc',
                     solar_title: '☀️ energía solar recibida',
                     solar_unit: 'PW·s',
                     solar_detail_title: '¿Qué pasa con esta energía?',
@@ -572,16 +651,16 @@
                     births_title: '👶 Nacimientos',
                     births_sub: '4.3 bebés/seg',
                     coffee_title: '☕ Café consumido',
-                    coffee_sub: '26 000 tazas/seg',
+                    coffee_sub: '26,000 tazas/seg',
                     google_title: '🔍 Búsquedas en Google',
-                    google_sub: '99 000 búsquedas/seg',
+                    google_sub: '99,000 búsquedas/seg',
                     food_title: '🍽️ Comida desperdiciada',
                     food_sub: '41 toneladas/seg',
                     digital_title: '💻 Mundo digital',
                     email_title: '✉️ Correos enviados',
                     email_sub: '3.5M correos/seg',
                     youtube_title: '🎬 Vistas en YouTube',
-                    youtube_sub: '115 000 videos/seg'
+                    youtube_sub: '115,000 videos/seg'
                 }
             };
 
@@ -595,7 +674,6 @@
                         el.textContent = translations[lang][key];
                     }
                 });
-                // Update buttons
                 document.querySelectorAll('.lang-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.lang === lang);
                 });
@@ -620,6 +698,21 @@
                 satelliteEl.textContent = (SATELLITE_SPEED * seconds).toFixed(3);
                 earthEl.textContent = (EARTH_SPEED * seconds).toFixed(3);
                 sunEl.textContent = (SUN_SPEED * seconds).toFixed(3);
+                lightEl.textContent = (LIGHT_SPEED * seconds).toFixed(0);
+
+                // Universe expansion (Mpc)
+                // Каждую секунду Вселенная расширяется на H0 * 1 секунду = 73.2 км на 1 Мпк
+                // Накопленное расширение: сумма всех секунд * 73.2 км/Мпк
+                const expansionMpc = (HUBBLE_CONSTANT * seconds) / 1000; // переводим км в Мпк (1 Мпк = 3.086e19 км)
+                universeExpansionEl.textContent = expansionMpc.toFixed(6);
+
+                // Возраст Вселенной (в годах)
+                const ageSeconds = BIG_BANG_TIME + seconds;
+                const ageYears = ageSeconds / (365.25 * 24 * 3600);
+                universeAgeEl.textContent = ageYears.toFixed(2);
+
+                // Расширение за 1 секунду в км на 1 Мпк
+                universePerSecEl.textContent = HUBBLE_CONSTANT.toFixed(1);
 
                 // Solar
                 const totalSolar = SOLAR_POWER_PW * seconds;
