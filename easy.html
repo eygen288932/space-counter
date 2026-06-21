@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Космические счётчики</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #1a1a1a;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+        }
+
+        .timer {
+            text-align: center;
+            padding: 20px 20px 18px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 24px;
+        }
+
+        .timer-label {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .timer-value {
+            font-size: 4rem;
+            font-weight: 600;
+            color: #000;
+            background: #f5f5f5;
+            display: inline-block;
+            padding: 0 2rem;
+            border-radius: 60px;
+            margin-top: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-unit {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .item {
+            background: #fafafa;
+            border-radius: 18px;
+            padding: 18px 12px 16px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+
+        .item:hover {
+            background: #f7f7f7;
+        }
+
+        .item-title {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #555;
+            letter-spacing: 0.2px;
+            margin-bottom: 8px;
+        }
+
+        .item-number {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #000;
+            font-variant-numeric: tabular-nums;
+            background: #fff;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+            display: inline-block;
+            min-width: 140px;
+            border: 1px solid #f0f0f0;
+            line-height: 1.4;
+        }
+
+        .item-sub {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .expand-wrapper {
+            background: #fafafa;
+            border-radius: 18px;
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .expand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 16px 16px;
+            cursor: pointer;
+            user-select: none;
+            gap: 8px;
+            transition: background 0.15s;
+            flex-wrap: wrap;
+        }
+
+        .expand-header:hover {
+            background: #f5f5f5;
+        }
+
+        .expand-header .item-number {
+            min-width: 160px;
+        }
+
+        .expand-arrow {
+            display: inline-block;
+            font-size: 1.2rem;
+            transition: transform 0.25s ease;
+            color: #888;
+            line-height: 1;
+            margin-left: 4px;
+        }
+
+        .expand-arrow.open {
+            transform: rotate(180deg);
+        }
+
+        .expand-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.3s ease;
+            padding: 0 16px;
+            background: #f7f7f7;
+            border-top: 1px solid #eee;
+        }
+
+        .expand-details.open {
+            max-height: 400px;
+            padding: 16px 16px 18px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #555;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #000;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .detail-sub {
+            font-size: 0.7rem;
+            color: #999;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #ccc;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .timer-value {
+                font-size: 2.8rem;
+                padding: 0 1.2rem;
+            }
+            .item-number {
+                font-size: 1.4rem;
+                min-width: 100px;
+            }
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .expand-header {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer">
+            <div class="timer-label">вы здесь уже</div>
+            <div class="timer-value" id="sessionTime">0</div>
+            <div class="timer-unit">секунд</div>
+        </div>
+
+        <div class="grid">
+            <div class="item">
+                <div class="item-title">🛰️ спутник пролетел</div>
+                <div class="item-number" id="satelliteKm">0.000</div>
+                <div class="item-sub">км · 7.77 км/с</div>
+            </div>
+
+            <div class="item">
+                <div class="item-title">🌍 Земля пролетела</div>
+                <div class="item-number" id="earthKm">0.000</div>
+                <div class="item-sub">км · 29.785 км/с</div>
+            </div>
+
+            <div class="item">
+                <div class="item-title">☀️ Солнце пролетело</div>
+                <div class="item-number" id="sunKm">0.000</div>
+                <div class="item-sub">км · 350 км/с</div>
+            </div>
+        </div>
+
+        <!-- Солнечная энергия -->
+        <div class="expand-wrapper">
+            <div class="expand-header" id="solarToggle">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;">
+                    <span style="font-weight:500; color:#555; font-size:0.9rem;">☀️ энергии прилетело</span>
+                    <span class="item-number" id="solarTotal">0.0</span>
+                    <span style="font-size:0.75rem; color:#999;">ПВт·с</span>
+                    <span class="expand-arrow" id="solarArrow">▾</span>
+                </div>
+            </div>
+            <div class="expand-details" id="solarDetails">
+                <div style="font-weight:500; font-size:0.85rem; color:#444; margin-bottom:10px;">Что происходит с этой энергией?</div>
+                <div class="detail-row">
+                    <span class="detail-label">☁️ Отражение (облака, атмосфера, льды)</span>
+                    <span class="detail-value" id="solarReflected">0.0</span>
+                    <span class="detail-sub">ПВт·с (30%)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🌫️ Поглощение атмосферой</span>
+                    <span class="detail-value" id="solarAbsorbed">0.0</span>
+                    <span class="detail-sub">ПВт·с (23%)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🌊 Доходит до поверхности</span>
+                    <span class="detail-value" id="solarSurface">0.0</span>
+                    <span class="detail-sub">ПВт·с (47%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Атомная энергия -->
+        <div class="expand-wrapper">
+            <div class="expand-header" id="nuclearToggle">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;">
+                    <span style="font-weight:500; color:#555; font-size:0.9rem;">⚛️ атомные станции выработали</span>
+                    <span class="item-number" id="nuclearTotal">0.0</span>
+                    <span style="font-size:0.75rem; color:#999;">ГДж</span>
+                    <span class="expand-arrow" id="nuclearArrow">▾</span>
+                </div>
+            </div>
+            <div class="expand-details" id="nuclearDetails">
+                <div style="font-weight:500; font-size:0.85rem; color:#444; margin-bottom:10px;">Электрическая и тепловая мощность</div>
+                <div class="detail-row">
+                    <span class="detail-label">⚡ Электрическая энергия</span>
+                    <span class="detail-value" id="nuclearElectric">0.0</span>
+                    <span class="detail-sub">ГДж (304 ГВт)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🔥 Тепловая энергия (КПД ~33%)</span>
+                    <span class="detail-value" id="nuclearThermal">0.0</span>
+                    <span class="detail-sub">ГДж (~1 ТВт тепла)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">обновляется каждую секунду · точные значения</div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const startTime = Date.now();
+
+            // --- ТОЧНЫЕ значения (как вы указали) ---
+            const SATELLITE_SPEED = 7.77;      // км/с
+            const EARTH_SPEED = 29.785;         // км/с
+            const SUN_SPEED = 350;              // км/с
+
+            const SOLAR_POWER_PW = 174;         // ПВт (ровно)
+            const REFLECTED_PCT = 0.30;
+            const ABSORBED_PCT = 0.23;
+            const SURFACE_PCT = 0.47;
+
+            const NUCLEAR_POWER_GW = 304;       // ГВт (ровно)
+            const NUCLEAR_THERMAL_POWER_GW = 1000; // ~1 ТВт
+
+            // --- DOM ---
+            const sessionEl = document.getElementById('sessionTime');
+            const satelliteEl = document.getElementById('satelliteKm');
+            const earthEl = document.getElementById('earthKm');
+            const sunEl = document.getElementById('sunKm');
+
+            const solarTotalEl = document.getElementById('solarTotal');
+            const solarReflectedEl = document.getElementById('solarReflected');
+            const solarAbsorbedEl = document.getElementById('solarAbsorbed');
+            const solarSurfaceEl = document.getElementById('solarSurface');
+
+            const nuclearTotalEl = document.getElementById('nuclearTotal');
+            const nuclearElectricEl = document.getElementById('nuclearElectric');
+            const nuclearThermalEl = document.getElementById('nuclearThermal');
+
+            // --- Toggle: солнечная ---
+            const solarToggle = document.getElementById('solarToggle');
+            const solarDetails = document.getElementById('solarDetails');
+            const solarArrow = document.getElementById('solarArrow');
+            let solarOpen = false;
+            solarToggle.addEventListener('click', function() {
+                solarOpen = !solarOpen;
+                solarDetails.classList.toggle('open', solarOpen);
+                solarArrow.classList.toggle('open', solarOpen);
+            });
+
+            // --- Toggle: атомная ---
+            const nuclearToggle = document.getElementById('nuclearToggle');
+            const nuclearDetails = document.getElementById('nuclearDetails');
+            const nuclearArrow = document.getElementById('nuclearArrow');
+            let nuclearOpen = false;
+            nuclearToggle.addEventListener('click', function() {
+                nuclearOpen = !nuclearOpen;
+                nuclearDetails.classList.toggle('open', nuclearOpen);
+                nuclearArrow.classList.toggle('open', nuclearOpen);
+            });
+
+            // --- Обновление ---
+            function update() {
+                const now = Date.now();
+                const seconds = (now - startTime) / 1000;
+
+                // Время
+                sessionEl.textContent = Math.floor(seconds);
+
+                // Километры (с 3 десятичными знаками для точности)
+                satelliteEl.textContent = (SATELLITE_SPEED * seconds).toFixed(3);
+                earthEl.textContent = (EARTH_SPEED * seconds).toFixed(3);
+                sunEl.textContent = (SUN_SPEED * seconds).toFixed(3);
+
+                // Солнечная энергия (1 десятичный знак)
+                const totalSolar = SOLAR_POWER_PW * seconds;
+                solarTotalEl.textContent = totalSolar.toFixed(1);
+                solarReflectedEl.textContent = (totalSolar * REFLECTED_PCT).toFixed(1);
+                solarAbsorbedEl.textContent = (totalSolar * ABSORBED_PCT).toFixed(1);
+                solarSurfaceEl.textContent = (totalSolar * SURFACE_PCT).toFixed(1);
+
+                // Атомная энергия (1 десятичный знак)
+                const electricGJ = NUCLEAR_POWER_GW * seconds;
+                const thermalGJ = NUCLEAR_THERMAL_POWER_GW * seconds;
+                nuclearTotalEl.textContent = electricGJ.toFixed(1);
+                nuclearElectricEl.textContent = electricGJ.toFixed(1);
+                nuclearThermalEl.textContent = thermalGJ.toFixed(1);
+            }
+
+            update();
+            setInterval(update, 100);
+
+        })();
+    </script>
+</body>
+</html>
