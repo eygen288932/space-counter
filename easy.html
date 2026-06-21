@@ -305,8 +305,8 @@
             <div class="expand-header" id="universeToggle">
                 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;">
                     <span style="font-weight:500; color:#555; font-size:0.9rem;" data-i18n="universe_title">🌌 расширение Вселенной</span>
-                    <span class="item-number" id="universeExpansion">0.000</span>
-                    <span style="font-size:0.75rem; color:#999;" data-i18n="universe_unit">Мпк</span>
+                    <span class="item-number" id="universeExpansion">0</span>
+                    <span style="font-size:0.75rem; color:#999;" data-i18n="universe_unit">км на 1 Мпк</span>
                     <span class="expand-arrow" id="universeArrow">▾</span>
                 </div>
             </div>
@@ -314,12 +314,12 @@
                 <div style="font-weight:500; font-size:0.85rem; color:#444; margin-bottom:10px;" data-i18n="universe_detail_title">Постоянная Хаббла: 73.2 км/с/Мпк</div>
                 <div class="detail-row">
                     <span class="detail-label" data-i18n="universe_age">⏳ Возраст Вселенной</span>
-                    <span class="detail-value" id="universeAge">0</span>
-                    <span class="detail-sub" data-i18n="universe_age_sub">лет с Большого взрыва</span>
+                    <span class="detail-value" id="universeAge">13.8</span>
+                    <span class="detail-sub" data-i18n="universe_age_sub">млрд лет</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label" data-i18n="universe_expansion_speed">📏 Расширение за 1 секунду</span>
-                    <span class="detail-value" id="universePerSec">0</span>
+                    <span class="detail-value" id="universePerSec">73.2</span>
                     <span class="detail-sub" data-i18n="universe_expansion_sub">км на 1 Мпк</span>
                 </div>
             </div>
@@ -432,16 +432,15 @@
             "use strict";
 
             const startTime = Date.now();
-            const BIG_BANG_TIME = 13.8e9; // 13.8 billion years in seconds
 
             // --- Точные значения ---
             const SATELLITE_SPEED = 7.77;
             const EARTH_SPEED = 29.785;
             const SUN_SPEED = 350;
-            const LIGHT_SPEED = 299792.458; // км/с
+            const LIGHT_SPEED = 299792.458;
 
             // Постоянная Хаббла: 73.2 км/с/Мпк
-            const HUBBLE_CONSTANT = 73.2; // км/с/Мпк
+            const HUBBLE_CONSTANT = 73.2;
 
             const SOLAR_POWER_PW = 174;
             const REFLECTED_PCT = 0.30;
@@ -534,10 +533,10 @@
                     light_title: '💡 свет пролетел',
                     light_sub: 'км · 299 792 км/с',
                     universe_title: '🌌 расширение Вселенной',
-                    universe_unit: 'Мпк',
+                    universe_unit: 'км на 1 Мпк',
                     universe_detail_title: 'Постоянная Хаббла: 73.2 км/с/Мпк',
                     universe_age: '⏳ Возраст Вселенной',
-                    universe_age_sub: 'лет с Большого взрыва',
+                    universe_age_sub: 'млрд лет',
                     universe_expansion_speed: '📏 Расширение за 1 секунду',
                     universe_expansion_sub: 'км на 1 Мпк',
                     solar_title: '☀️ энергии прилетело',
@@ -581,10 +580,10 @@
                     light_title: '💡 light traveled',
                     light_sub: 'km · 299,792 km/s',
                     universe_title: '🌌 universe expansion',
-                    universe_unit: 'Mpc',
+                    universe_unit: 'km per 1 Mpc',
                     universe_detail_title: 'Hubble constant: 73.2 km/s/Mpc',
                     universe_age: '⏳ Age of the Universe',
-                    universe_age_sub: 'years since Big Bang',
+                    universe_age_sub: 'billion years',
                     universe_expansion_speed: '📏 Expansion per second',
                     universe_expansion_sub: 'km per 1 Mpc',
                     solar_title: '☀️ solar energy received',
@@ -628,10 +627,10 @@
                     light_title: '💡 luz recorrió',
                     light_sub: 'km · 299,792 km/s',
                     universe_title: '🌌 expansión del Universo',
-                    universe_unit: 'Mpc',
+                    universe_unit: 'km por 1 Mpc',
                     universe_detail_title: 'Constante de Hubble: 73.2 km/s/Mpc',
                     universe_age: '⏳ Edad del Universo',
-                    universe_age_sub: 'años desde el Big Bang',
+                    universe_age_sub: 'mil millones de años',
                     universe_expansion_speed: '📏 Expansión por segundo',
                     universe_expansion_sub: 'km por 1 Mpc',
                     solar_title: '☀️ energía solar recibida',
@@ -686,32 +685,34 @@
                 });
             });
 
+            // --- Formatting helper ---
+            function formatNumber(num, decimals = 0) {
+                if (decimals > 0) {
+                    return Number(num.toFixed(decimals)).toLocaleString(currentLang);
+                }
+                return Math.floor(num).toLocaleString(currentLang);
+            }
+
             // --- Update counters ---
             function update() {
                 const now = Date.now();
                 const seconds = (now - startTime) / 1000;
 
                 // Timer
-                sessionEl.textContent = Math.floor(seconds);
+                sessionEl.textContent = Math.floor(seconds).toLocaleString(currentLang);
 
                 // Space (km)
                 satelliteEl.textContent = (SATELLITE_SPEED * seconds).toFixed(3);
                 earthEl.textContent = (EARTH_SPEED * seconds).toFixed(3);
                 sunEl.textContent = (SUN_SPEED * seconds).toFixed(3);
-                lightEl.textContent = (LIGHT_SPEED * seconds).toFixed(0);
+                lightEl.textContent = formatNumber(LIGHT_SPEED * seconds);
 
-                // Universe expansion (Mpc)
-                // Каждую секунду Вселенная расширяется на H0 * 1 секунду = 73.2 км на 1 Мпк
-                // Накопленное расширение: сумма всех секунд * 73.2 км/Мпк
-                const expansionMpc = (HUBBLE_CONSTANT * seconds) / 1000; // переводим км в Мпк (1 Мпк = 3.086e19 км)
-                universeExpansionEl.textContent = expansionMpc.toFixed(6);
+                // Universe expansion (km per 1 Mpc)
+                const expansionKm = HUBBLE_CONSTANT * seconds;
+                universeExpansionEl.textContent = formatNumber(expansionKm);
 
-                // Возраст Вселенной (в годах)
-                const ageSeconds = BIG_BANG_TIME + seconds;
-                const ageYears = ageSeconds / (365.25 * 24 * 3600);
-                universeAgeEl.textContent = ageYears.toFixed(2);
-
-                // Расширение за 1 секунду в км на 1 Мпк
+                // Universe age - static 13.8 billion years
+                universeAgeEl.textContent = '13.8';
                 universePerSecEl.textContent = HUBBLE_CONSTANT.toFixed(1);
 
                 // Solar
@@ -728,13 +729,13 @@
                 nuclearElectricEl.textContent = electricGJ.toFixed(1);
                 nuclearThermalEl.textContent = thermalGJ.toFixed(1);
 
-                // Human counters
-                birthsEl.textContent = Math.floor(BIRTHS_PER_SEC * seconds);
-                coffeeEl.textContent = Math.floor(COFFEE_PER_SEC * seconds);
-                googleEl.textContent = Math.floor(GOOGLE_PER_SEC * seconds);
-                foodEl.textContent = Math.floor(FOOD_PER_SEC * seconds);
-                emailEl.textContent = Math.floor(EMAIL_PER_SEC * seconds);
-                youtubeEl.textContent = Math.floor(YOUTUBE_PER_SEC * seconds);
+                // Human counters (with formatting)
+                birthsEl.textContent = formatNumber(BIRTHS_PER_SEC * seconds);
+                coffeeEl.textContent = formatNumber(COFFEE_PER_SEC * seconds);
+                googleEl.textContent = formatNumber(GOOGLE_PER_SEC * seconds);
+                foodEl.textContent = formatNumber(FOOD_PER_SEC * seconds);
+                emailEl.textContent = formatNumber(EMAIL_PER_SEC * seconds);
+                youtubeEl.textContent = formatNumber(YOUTUBE_PER_SEC * seconds);
             }
 
             update();
